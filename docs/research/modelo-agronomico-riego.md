@@ -152,13 +152,28 @@ Donde:
 
 | Factor | Qué captura | Valores |
 |---|---|---|
-| **ks** — especie | necesidad hídrica relativa de la especie | Muy baja 0.1 · Baja 0.3 · Moderada 0.6 · Alta 0.8 |
+| **ks** — especie | necesidad hídrica relativa de la especie | Muy baja `<0.10` · Baja `0.10–0.30` · Moderada `0.40–0.60` · Alta `0.70–0.90` (ver corrección abajo) |
 | **kd** — densidad | cuánto dosel/cobertura hay realmente | Baja 0.5 · Media 0.75 · Alta 1.0 |
 | **kmc** — microclima | exposición: sombra vs. pared sur reflectante y ventosa | Bajo 0.5 · Medio 0.75 · Alto 1.25 |
 
 El factor de especie `ks` se resuelve consultando **WUCOLS** (Water Use Classification of Landscape Species), mantenido por el California Center for Urban Horticulture de UC Davis, que clasifica **más de 3.500 especies ornamentales** en categorías muy baja / baja / moderada / alta ([WUCOLS, UC ANR](https://ucanr.edu/sites/WUCOLS)).
 
 **Esto es exactamente lo que este proyecto necesita**: una fuente estructurada, citable, con cobertura de miles de ornamentales, cuya salida es un número entre 0.1 y 0.8 que multiplica a ET0. Encaja con la restricción del mapa ("los hechos duros por especie salen de una fuente estructurada citable"): la ficha de especie almacena una categoría WUCOLS, no un número inventado por el LLM.
+
+> **Corrección (2026-08-13, [ticket #3](https://github.com/Joosle/Plantas/issues/3)).** Los valores puntuales
+> `0.1 / 0.3 / 0.6 / 0.8` que este documento anotaba **no son los del fichero real de WUCOLS**. El volcado
+> oficial (`wucols-data.json`, 4.103 taxones, snapshot de 2025-06-27) define `plantFactor` como **rangos**:
+> VL `<0.10`, LO `0.10–0.30`, M `0.40–0.60`, H `0.70–0.90`. Los antiguos valores siguen sirviendo como punto
+> medio operativo, pero hay que saber que son una elección del proyecto dentro de un rango, no el dato.
+>
+> Además existen **dos categorías que este modelo no contemplaba** y que deben **desactivar el balance
+> hídrico** en lugar de caer a un número por defecto:
+>
+> - `U` — especie **no evaluada** en esa región.
+> - `NA` — especie **no apta** para esa región.
+>
+> Ambas caen en la regla de §"Faltan datos": no dar litros, sólo "toca revisar". Detalle y verificación en
+> [`fuente-cuidados-datasets.md`](./fuente-cuidados-datasets.md).
 
 **Advertencias que hay que declarar**:
 
@@ -299,7 +314,7 @@ Dos modos con el **mismo esqueleto** (un depósito que se vacía), parámetros d
 | Precipitación diaria | `P` [mm] | Open-Meteo `daily=precipitation_sum` | ídem |
 | Temp. máx/mín | `Tmax`,`Tmin` [°C] | Open-Meteo (alertas de helada/calor + fallback HS) | ídem |
 | Lat/lon | `φ`, `λ` | perfil de la vivienda (una vez) | — |
-| Categoría hídrica de especie | `ks` ∈ {0.1, 0.3, 0.6, 0.8} | ficha de especie ← WUCOLS | estática |
+| Categoría hídrica de especie | `ks` ∈ {VL, LO, M, H} → punto medio del rango; `U`/`NA` desactivan el balance | ficha de especie ← WUCOLS | estática |
 | Densidad de plantación | `kd` ∈ {0.5, 0.75, 1.0} | ficha de la planta (declarado por el usuario) | estática |
 | Microclima | `kmc` ∈ {0.5, 0.75, 1.25} | ubicación de la planta (sombra / normal / pared sur o ventoso) | estática |
 | Tipo de emplazamiento | `maceta` \| `suelo` | ficha de la planta | estática |
