@@ -427,7 +427,8 @@ ET0_HS = 0.0023 · (Tmedia + 17.8) · √(Tmax − Tmin) · Ra_mm
 - **La salud del sistema radicular.** Raíces enrolladas, pudrición o cepellón deshidratado hidrofóbico (que repele el agua y la deja escurrir por las paredes) cambian todo y son invisibles al modelo.
 - **La exposición real al sol.** El número de horas de sol directo que recibe *ese rincón* no está en ninguna API. `kmc` es un parche de tres valores.
 - **El riego por debajo de la superficie** (platos, autorriego, mechas).
-- **Especies con fisiología distinta**: crasas y CAM no siguen la lógica de ET0 (transpiran de noche, resisten agotamiento total). El modelo debe **desactivarse** para ellas y dar solo el calendario estacional.
+- **Especies con fisiología distinta**: crasas y CAM no siguen la lógica de ET0 (transpiran de noche, resisten agotamiento total). ~~El modelo debe **desactivarse** para ellas y dar solo el calendario estacional.~~
+  > **Anulado por el [ADR 0007](../adr/0007-lo-que-se-mide-no-se-ajusta.md).** La advertencia fisiológica sigue siendo cierta, pero **ninguna planta queda excluida del balance por categoría botánica**: el aloe es la única planta que se riega en esta casa, así que desactivarlo dejaba al motor hídrico sin ningún ejemplar sobre el que emitir un consejo falsable. La baja demanda de una crasa se expresa en los parámetros (`ks` muy bajo, `u` alto), no en un interruptor. La fila correspondiente de la tabla de degradación de abajo decae con ella.
 - **Plantas recién trasplantadas o en establecimiento**: consumo y volumen radicular en flujo; el modelo no aplica durante ~4–8 semanas.
 - **Interior**: fuera de alcance por decisión del mapa. El clima exterior no entra.
 
@@ -458,6 +459,8 @@ ET_corregida = ET_modelo / c_planta
 ```
 
 Es un solo parámetro por planta, interpretable, acotado a [0.5, 2.0], y convierte el diario en la señal de realimentación que sustituye al sensor que no hay. **Esta es la fase que más precisión aporta por línea de código**, y solo es posible porque el diario ya es el estado del sistema.
+
+> **Sustituido por el [ADR 0007](../adr/0007-lo-que-se-mide-no-se-ajusta.md).** El ajuste automático de arriba no es viable: con ~20 riegos al año sobre una sola planta no hay mediana que signifique nada, y peor, el intervalo real está contaminado por el hábito del usuario — el modelo aprendería su calendario y se lo devolvería como consejo. En su lugar, el LLM **propone** y el usuario **ratifica**, sobre dos parámetros (`KL` y `u`) con evidencia separada por canal, y con al menos una **señal negativa** entre los hechos que sostienen la propuesta. El `[0.5, 2.0]` se sustituye por dominio físico más tope por paso.
 
 **Fuera de plan (declarado como no-objetivo)**: dual Kc (Kcb + Ke, FAO-56 cap. 7), fenología por etapas con Kc ini/mid/end, y ecuaciones 97/98 de cobertura de suelo. Aportan precisión en el término que ya no domina el error (§5).
 

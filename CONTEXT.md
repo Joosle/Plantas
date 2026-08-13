@@ -71,3 +71,25 @@ _Avoid_: Warning, notification, urgent task
 **WeatherSnapshot** (instantánea de clima):
 El estado del tiempo — observado y pronosticado — tal como se descargó en una fecha. Se conserva porque el consejo que lo citó debe poder auditarse después.
 _Avoid_: Forecast, weather data
+
+### La corrección del modelo
+
+**ParameterAdjustment** (ajuste):
+Un cambio fechado de `KL` o de `u` en una Plant concreta, propuesto con evidencia y ratificado por el usuario. Nunca se aplica solo, y sólo esos dos números son ajustables: lo demás se mide.
+_Avoid_: Calibration, tuning, correction factor
+
+**Revocation** (revocación):
+Retirada de un ParameterAdjustment, libre y sin evidencia, que restaura el valor exacto anterior. Queda fechada porque el rastro es evidencia contra volver a proponer lo mismo.
+_Avoid_: Undo, rollback, reset
+
+**NegativeSignal** (señal negativa):
+Un hecho del diario que **contradice** al modelo: un Reading de humedad, o una supresión aceptada. Se distingue de un riego, que sólo confirma. Sin al menos uno, no hay ajuste.
+_Avoid_: Counter-evidence, disagreement
+
+**PredictionError** (error de predicción):
+La diferencia en días, con signo, entre el riego previsto y el registrado. Es el detector de que el modelo deriva; no autoriza corregirlo.
+_Avoid_: Accuracy, deviation, residual
+
+**MeasurementRequest** (petición de medida):
+Lo que el sistema pide cuando la evidencia apunta a una magnitud física — dosel, maceta, profundidad radicular. No es ajuste ni cuidado: es coger el metro.
+_Avoid_: Task, measurement task
