@@ -57,8 +57,16 @@ El acta inmutable del consejo dado en una semana, para todas las Plant, con los 
 _Avoid_: Schedule, weekly tasks, care plan
 
 **PlanItem** (tarea del plan):
-Una tarea sobre una Plant dentro de un WeeklyPlan. Su estado no se guarda: se deriva de las JournalEntry que lo responden.
+Una tarea sobre una Plant dentro de un WeeklyPlan, con el motivo por el que se manda y los hechos que lo respaldan. Su estado no se guarda: se deriva de las JournalEntry que lo responden.
 _Avoid_: Todo, task, checklist item
+
+**Questioned** (cuestionada):
+PlanItem que el motor propone saltarse, con su motivo. No desaparece: sigue en la checklist esperando que el usuario acepte o lo haga igual. Es la única forma de quitar una tarea.
+_Avoid_: Skipped, dismissed, cancelled
+
+**Unsupported** (sin respaldo):
+PlanItem cuyas citas no se pudieron verificar. Sale igual en la checklist con esa marca, porque un consejo sin respaldo es información: dice que el motor se está inventando cosas.
+_Avoid_: Invalid, unverified
 
 **Carried over** (arrastrada):
 Un PlanItem que nace en un WeeklyPlan porque su equivalente de la semana anterior quedó sin responder, apuntando al viejo para que se vea cuánto lleva pendiente.
@@ -71,3 +79,21 @@ _Avoid_: Warning, notification, urgent task
 **WeatherSnapshot** (instantánea de clima):
 El estado del tiempo — observado y pronosticado — tal como se descargó en una fecha. Se conserva porque el consejo que lo citó debe poder auditarse después.
 _Avoid_: Forecast, weather data
+
+### Lo que el motor propone y el usuario ratifica
+
+**Proposal** (propuesta):
+Algo que el motor quiere cambiar en sí mismo y no puede aplicar solo. Vive en la app, nunca interrumpe, y no es una tarea: no se tacha, se acepta o se descarta.
+_Avoid_: Suggestion, request, pending change
+
+**VocabularyProposal** (propuesta de vocabulario):
+Proposal de un verbo o etiqueta que el motor querría poder mandar y hoy no existe. Aceptarla lo añade al vocabulario cerrado del diario.
+_Avoid_: New action, custom verb
+
+**ParameterAdjustment** (ajuste de parámetro):
+Proposal de cambiar un número del modelo hídrico de una Plant concreta, con el patrón del diario que lo motiva. Aceptado, se guarda como hecho fechado — no como una edición, para que un plan viejo siga siendo explicable.
+_Avoid_: Calibration, tuning, correction
+
+**SeasonConclusion** (conclusión de temporada):
+Proposal anual: un patrón que el motor cree haber visto en el año, con su evidencia y cuántos casos la sostienen. Aceptada, es un hecho citable — y es lo que sobrevive cuando el diario crudo más viejo deja de caber en el contexto.
+_Avoid_: Insight, summary, learning
