@@ -35,20 +35,40 @@ _Avoid_: Deleted, inactive, removed
 ### El diario
 
 **JournalEntry** (entrada de diario):
-Lo que se sabe de una Plant a lo largo del tiempo. Es CareAction u Observation. El diario es el estado del sistema: si no hay entradas, el motor está ciego.
+Lo que se sabe de una Plant a lo largo del tiempo. Es CareAction, Observation o LifecycleEvent. El diario es el estado del sistema: si no hay entradas, el motor está ciego.
 _Avoid_: Log entry, record, event
 
+**occurredAt / recordedAt** (cuándo pasó / cuándo se anotó):
+Las dos fechas que lleva toda JournalEntry. El motor calcula con `occurredAt`, así que anotar tarde no falsea el estado; `recordedAt` es lo que permite saber cuánto se anota al día.
+_Avoid_: date, timestamp, createdAt a secas
+
 **CareAction** (acción):
-Algo que el usuario hizo a una Plant, de un vocabulario cerrado, en una fecha. Responde a "¿cuándo se hizo esto por última vez?".
+Algo que el usuario hizo a una Plant, de un vocabulario cerrado de Verb, en una fecha. Responde a "¿cuándo se hizo esto por última vez?". Lleva siempre una nota libre opcional.
 _Avoid_: Task, activity, care event
 
+**Verb** (verbo):
+El vocabulario cerrado de las CareAction. Un verbo existe sólo si alguna regla del motor lo lee o el plan puede llegar a mandarlo — ver ADR 0003. Lo que no pasa esa regla no es un verbo: es una Observation.
+_Avoid_: action type, care type, task type
+
 **Observation** (observación):
-Algo que el usuario vio en una Plant. Texto libre con etiquetas, y opcionalmente una lectura estructurada.
+Algo que el usuario vio en una Plant. Texto libre, con etiquetas cerradas, opcionalmente una lectura estructurada y opcionalmente fotos.
 _Avoid_: Note, comment, remark
 
 **Reading** (lectura):
-La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él.
+La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él. Hoy sólo existe la humedad del sustrato (seco / húmedo).
 _Avoid_: Measurement, sensor value
+
+**LifecycleEvent** (hito):
+Entrada de diario que **nadie escribe a mano**: la genera el sistema cuando cambia la ficha de una Plant — alta, identificación, cambio de Site, archivado. No es CareAction (no se le hizo nada a la planta) ni Observation (no se vio nada); es la ficha dejando rastro con fecha.
+_Avoid_: Audit log, history, change event
+
+**Batch** (gesto en lote):
+Varias CareAction escritas de una vez con un mismo `batchId` porque nacieron de un solo gesto — acolchar un Site entero. Es agrupación de interfaz: cada entrada sigue siendo de una Plant concreta, y por eso sigue siendo cierta cuando el Site cambia de inquilinos.
+_Avoid_: bulk entry, group action
+
+**Silencio con caducidad** (stale journal):
+No anotar nada de una Plant significa no haber hecho nada — hasta que el silencio supera con holgura la cadencia que el motor esperaba de *esa* planta. Pasado ese punto el silencio deja de ser evidencia, el consejo degrada de cuantitativo a cualitativo y se pide una reconciliación de un toque. Ver ADR 0004.
+_Avoid_: inactivity, abandono
 
 ### El consejo
 
