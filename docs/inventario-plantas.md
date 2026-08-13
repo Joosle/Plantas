@@ -9,7 +9,34 @@ Resuelve el ticket [Inventariar las plantas reales de casa](https://github.com/J
 
 Vocabulario (`Plant`, `Site`, `Taxon`, `Unidentified`) según `CONTEXT.md`.
 
-Última actualización: 2026-08-10.
+Última actualización: 2026-08-13.
+
+## Ubicación
+
+Todos los `Site` de abajo están en la misma casa, y por tanto comparten un único punto
+meteorológico. Hasta 2026-08-13 este dato **no estaba escrito en ninguna parte del repo**,
+pese a que la decisión de [Fuente meteorológica](https://github.com/Joosle/Plantas/issues/4)
+(una llamada diaria a Open-Meteo) no se puede ejecutar sin él.
+
+| Dato | Valor | Para qué |
+| --- | --- | --- |
+| Municipio | El Casar, Guadalajara (19170) | Identificación humana |
+| Latitud / longitud | `40.70021, -3.42541` | `latitude`/`longitude` de Open-Meteo |
+| Altitud | 824 m | Contexto de heladas — no es meseta baja |
+| Zona Meteoalerta | `681903` — Alcarria de Guadalajara | Filtro de avisos AEMET (ver abajo) |
+| Zona horaria | `Europe/Madrid` | `timezone` de Open-Meteo |
+
+Se registra el **municipio y las coordenadas, no la dirección postal**: a una rejilla de
+7–11 km el número de la calle no cambia ni un dato del modelo, así que no hay razón para
+guardarlo aunque el repo sea privado.
+
+**Trampa de geocodificación, verificada.** Buscar `El Casar` en el geocodificador de
+Open-Meteo devuelve **primero El Casar de Badajoz**, a 400 km; el de Guadalajara sólo
+aparece bajo su nombre histórico **`El Casar de Talamanca`**. Es el mismo hallazgo que
+[el camino de identificación](https://github.com/Joosle/Plantas/issues/5) encontró con los
+nombres comunes de plantas: **resolver un nombre por cadena de texto falla en silencio y
+devuelve algo plausible**. Por eso las coordenadas se fijan aquí como constante y no se
+geocodifican en tiempo de ejecución.
 
 ## Sites
 
