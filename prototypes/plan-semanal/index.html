@@ -1,0 +1,843 @@
+<title>Plan semanal del jardín</title>
+<!--
+  PROTOTIPO DESECHABLE — ticket #11. No es código de producción.
+
+  "Tres variantes de la pantalla del plan semanal, conmutables con ?variant=,
+   cruzadas con ?semana= (llena | vacia)."
+
+  Datos: las 4 plantas reales de docs/inventario-plantas.md.
+  Sin persistencia: todo el estado vive en memoria y se pierde al recargar.
+-->
+<style>
+  /* ---------- fichas ---------- */
+  :root {
+    --ground:   #F6F7F2;
+    --surface:  #FFFFFF;
+    --sunken:   #EDEFE7;
+    --ink:      #1D2219;
+    --muted:    #6B7365;
+    --hair:     #DDE0D4;
+    --accent:   #3D6B4B;
+    --accent-w: #E4EDE4;
+    --warn:     #96690C;
+    --warn-w:   #FBF0D6;
+    --warn-line:#D9A62E;
+    --danger:   #96442C;
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+
+    --r: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #111409;
+      --surface:  #1A1E14;
+      --sunken:   #21261A;
+      --ink:      #E9EBE0;
+      --muted:    #9AA38F;
+      --hair:     #2E3527;
+      --accent:   #93C29C;
+      --accent-w: #1F2C21;
+      --warn:     #E3B24C;
+      --warn-w:   #2E2611;
+      --warn-line:#B98F23;
+      --danger:   #DE9376;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:   #111409;
+    --surface:  #1A1E14;
+    --sunken:   #21261A;
+    --ink:      #E9EBE0;
+    --muted:    #9AA38F;
+    --hair:     #2E3527;
+    --accent:   #93C29C;
+    --accent-w: #1F2C21;
+    --warn:     #E3B24C;
+    --warn-w:   #2E2611;
+    --warn-line:#B98F23;
+    --danger:   #DE9376;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  #app {
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ---------- piezas compartidas ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .latin { font-family: var(--serif); font-style: italic; }
+  .num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+
+  header.plan-head { display: flex; flex-direction: column; gap: .15rem; }
+  header.plan-head h1 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -.01em;
+  }
+  .age { font-size: .78rem; color: var(--muted); }
+  .age.stale { color: var(--warn); }
+
+  /* aviso de clima */
+  .alerta {
+    background: var(--warn-w);
+    border: 1px solid var(--warn-line);
+    border-left-width: 4px;
+    border-radius: var(--r);
+    padding: .7rem .85rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+  .alerta .eyebrow { color: var(--warn); }
+  .alerta strong { font-size: .95rem; }
+  .alerta p { margin: 0; font-size: .85rem; }
+  .fuente { font-size: .72rem; color: var(--muted); font-family: var(--mono); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .card > .body { padding: .8rem .85rem; display: flex; flex-direction: column; gap: .5rem; }
+
+  .plant-name { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; }
+  .site { font-size: .76rem; color: var(--muted); }
+
+  .porque {
+    font-size: .84rem;
+    color: var(--muted);
+    background: var(--sunken);
+    border-radius: 8px;
+    padding: .55rem .65rem;
+    display: flex; flex-direction: column; gap: .45rem;
+  }
+  .porque .hechos { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .hecho {
+    font-family: var(--mono); font-size: .68rem;
+    border: 1px solid var(--hair); border-radius: 999px;
+    padding: .1rem .45rem; color: var(--muted); background: var(--surface);
+  }
+  .link-porque {
+    background: none; border: 0; padding: 0;
+    font-size: .78rem; color: var(--accent); text-align: left;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  .acciones { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .btn {
+    border: 1px solid var(--hair);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: .45rem .8rem;
+    font-size: .85rem;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--ground); font-weight: 600; }
+  .btn.big { padding: .8rem 1rem; font-size: .95rem; flex: 1; }
+  .btn[aria-pressed="true"] { background: var(--accent-w); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  .nota {
+    width: 100%; font: inherit; font-size: .85rem;
+    background: var(--ground); color: var(--ink);
+    border: 1px dashed var(--hair); border-radius: 8px;
+    padding: .5rem .6rem; resize: vertical; min-height: 2.6rem;
+  }
+  .nota::placeholder { color: var(--muted); }
+
+  .diario-eco {
+    font-size: .74rem; color: var(--accent);
+    font-family: var(--mono);
+    display: flex; align-items: center; gap: .35rem;
+  }
+
+  .silencio { font-size: .85rem; color: var(--muted); }
+
+  /* supresión propuesta */
+  .card.suprimir { border-style: dashed; border-color: var(--muted); }
+  .card.suprimir .plant-name { text-decoration: line-through; text-decoration-color: var(--muted); }
+  .card.resuelto-quitar { opacity: .55; }
+  .llm-dice {
+    font-size: .84rem;
+    border-left: 3px solid var(--accent);
+    padding-left: .6rem;
+    color: var(--ink);
+  }
+  .llm-dice .quien { font-family: var(--mono); font-size: .68rem; color: var(--muted); display: block; letter-spacing: .06em; text-transform: uppercase; }
+
+  .aceptar-cambios {
+    background: var(--accent-w);
+    border: 1px solid var(--accent);
+    border-radius: var(--r);
+    padding: .6rem .8rem;
+    display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+    font-size: .82rem;
+  }
+
+  /* --- variante A: ficha por planta --- */
+  .a-plant + .a-plant { margin-top: 0; }
+  .a-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: .6rem;
+    padding: .7rem .85rem;
+    border-bottom: 1px solid var(--hair);
+  }
+  .a-plant.quiet .a-head { border-bottom: 0; }
+  .a-plant.quiet .body { padding-top: 0; }
+  .conteo { font-family: var(--mono); font-size: .72rem; color: var(--muted); white-space: nowrap; }
+
+  /* --- variante B: por acción --- */
+  .grupo { display: flex; flex-direction: column; gap: .5rem; }
+  .grupo-head {
+    display: flex; align-items: center; gap: .5rem;
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .grupo-head::after { content: ""; flex: 1; height: 1px; background: var(--hair); }
+  .fila {
+    display: flex; align-items: flex-start; gap: .7rem;
+    background: var(--surface); border: 1px solid var(--hair);
+    border-radius: var(--r); padding: .65rem .75rem;
+  }
+  .tick {
+    flex: 0 0 auto; width: 1.5rem; height: 1.5rem; margin-top: .1rem;
+    border: 1.5px solid var(--hair); border-radius: 6px;
+    background: var(--ground); display: grid; place-items: center;
+    font-size: .9rem; color: transparent;
+  }
+  .fila[data-hecho="1"] .tick { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  .fila[data-hecho="1"] .fila-txt { color: var(--muted); text-decoration: line-through; }
+  .fila-txt { flex: 1; font-size: .92rem; }
+  .fila-txt small { display: block; font-size: .74rem; color: var(--muted); text-decoration: none; }
+  details.plegado { border-top: 1px solid var(--hair); padding-top: .75rem; }
+  details.plegado > summary {
+    cursor: pointer; font-size: .84rem; color: var(--muted); list-style: none;
+    display: flex; align-items: center; gap: .4rem;
+  }
+  details.plegado > summary::-webkit-details-marker { display: none; }
+  details.plegado > summary::before { content: "▸"; font-size: .7rem; }
+  details.plegado[open] > summary::before { content: "▾"; }
+  details.plegado > div { padding-top: .6rem; display: flex; flex-direction: column; gap: .45rem; }
+
+  /* --- variante C: una cosa a la vez --- */
+  .c-wrap { display: flex; flex-direction: column; gap: 1rem; min-height: 60vh; }
+  .progreso { display: flex; align-items: center; gap: .5rem; }
+  .progreso .barras { display: flex; gap: .2rem; flex: 1; }
+  .progreso .barras i { flex: 1; height: 3px; background: var(--hair); border-radius: 2px; }
+  .progreso .barras i.done { background: var(--accent); }
+  .progreso .barras i.now { background: var(--ink); }
+  .c-card {
+    background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r);
+    padding: 1.1rem 1rem; display: flex; flex-direction: column; gap: .8rem; flex: 1;
+  }
+  .c-card.aviso { background: var(--warn-w); border-color: var(--warn-line); }
+  .c-verbo { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.15; text-wrap: balance; }
+  .c-razon { font-size: .95rem; }
+  .c-nav { display: flex; gap: .5rem; }
+  .c-cierre { display: flex; flex-direction: column; gap: .7rem; }
+
+  /* --- conmutador flotante (no forma parte del diseño evaluado) --- */
+  #switcher {
+    position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%);
+    z-index: 50; display: flex; flex-direction: column; gap: .3rem; align-items: center;
+    width: max-content; max-width: calc(100vw - 1.5rem);
+  }
+  #switcher .row {
+    display: flex; align-items: stretch; gap: 1px;
+    background: #14170F; color: #F6F7F2;
+    border-radius: 999px; padding: .25rem;
+    box-shadow: 0 6px 24px rgba(0,0,0,.32);
+    font-family: var(--mono); font-size: .74rem;
+  }
+  #switcher button {
+    background: none; border: 0; color: inherit;
+    padding: .35rem .7rem; border-radius: 999px;
+  }
+  #switcher .label { padding: .35rem .55rem; white-space: nowrap; align-self: center; }
+  #switcher .seg button[aria-current="true"] { background: #F6F7F2; color: #14170F; font-weight: 700; }
+  #switcher .hint { font-family: var(--mono); font-size: .62rem; color: var(--muted); }
+</style>
+
+<div id="app"></div>
+
+<div id="switcher">
+  <div class="row">
+    <button id="prev" aria-label="Variante anterior">←</button>
+    <span class="label" id="vlabel"></span>
+    <button id="next" aria-label="Variante siguiente">→</button>
+  </div>
+  <div class="row seg" id="semana-seg">
+    <button data-semana="llena">semana llena</button>
+    <button data-semana="vacia">semana vacía</button>
+  </div>
+  <div class="hint">prototipo · #11 · ← → para cambiar</div>
+</div>
+
+<script>
+/* ============================================================
+   DATOS — las 4 plantas reales, semana del 10-ago-2026
+   ============================================================ */
+
+const PLANTAS = {
+  olivo: { nombre: "Olivo",  latin: "Olea europaea", sitio: "Jardín este · suelo" },
+  abeto: { nombre: "Abeto",  latin: null,            sitio: "Jardín noroeste, centro · suelo" },
+  rosal: { nombre: "Rosal",  latin: "Rosa",          sitio: "Fachada noroeste, bajo alero · suelo" },
+  aloe:  { nombre: "Aloe",   latin: "Aloe vera",     sitio: "Terraza suroeste · maceta 7,5 L" },
+};
+
+const SEMANAS = {
+  llena: {
+    titulo: "Semana del 10 de agosto",
+    edad: "Generado el lunes, hace 4 días",
+    stale: false,
+    alertas: [{
+      ambito: "Toda la casa",
+      titulo: "Aviso amarillo por temperaturas máximas",
+      texto: "Se esperan 37 °C o más de martes a jueves. El aloe de la terraza suroeste da al sol de tarde.",
+      fuente: "AEMET · zona 681903 Alcarria de Guadalajara · vigente hasta el jue 21:00",
+    }],
+    items: [
+      {
+        id: "aloe-riego",
+        planta: "aloe", verbo: "water", accion: "Riega el aloe a fondo",
+        corto: "Riégalo a fondo",
+        razon: "El depósito de la maceta bajó al 22 % el miércoles. Con las máximas previstas se vacía antes del domingo.",
+        hechos: ["ks Aloe · WUCOLS (género)", "ET0 · Open-Meteo 10–16 ago"],
+        respuestas: ["Hecho", "Le eché poco", "No"],
+        pregunta: false,
+      },
+      {
+        id: "aloe-hijuelos",
+        planta: "aloe", verbo: "divide", accion: "¿Tiene hijuelos de más de un palmo?",
+        corto: "Mira si tiene hijuelos",
+        razon: "Si los hay, se separan ahora y no en octubre. No lo sé desde aquí: hay que mirarlo.",
+        hechos: ["Separación de hijuelos · IVIA (género)"],
+        respuestas: ["Sí, los tiene", "No", "No lo he mirado"],
+        pregunta: true,
+      },
+      {
+        id: "abeto-id",
+        planta: "abeto", verbo: "identify", accion: "El abeto sigue sin identificar",
+        corto: "Hazle una foto",
+        razon: "Sin nombre no tengo su temperatura mínima, así que en enero no sabré si avisarte de la helada.",
+        hechos: ["Sin taxón", "Rusticidad ausente"],
+        respuestas: ["Hacer foto", "Ahora no"],
+        pregunta: false,
+      },
+    ],
+    supresiones: [{
+      id: "rosal-riego",
+      planta: "rosal", verbo: "water", accion: "Riega el rosal",
+      llm: "Lo propuse por el balance: está bajo alero y no le llegó la lluvia del día 8. Pero su coeficiente está sin determinar entre 0,10 y 0,60, y por el extremo bajo aún le quedan tres semanas. Yo lo quitaría. Si lo ves mustio, déjalo y me habré equivocado.",
+      hechos: ["KL Rosa · 0,10–0,60 (género)", "Lluvia 8 ago · no interceptada"],
+    }],
+    reconciliacion: {
+      id: "aloe-silencio",
+      planta: "aloe",
+      texto: "El aloe lleva 11 días sin ninguna nota y sueles tocarlo cada 5.",
+      respuestas: ["Lo regué y no lo apunté", "Está seco", "Está húmedo"],
+    },
+    silencio: [
+      { planta: "olivo", linea: "Nada. Le quedan unos tres meses de autonomía y llovió el día 8." },
+      { planta: "rosal", linea: "Nada, si aceptas quitar el riego de arriba." },
+      { planta: "abeto", linea: "Nada más hasta que sepa qué es." },
+    ],
+  },
+
+  vacia: {
+    titulo: "Semana del 3 de agosto",
+    edad: "Generado el lunes, hace 2 días",
+    stale: false,
+    alertas: [],
+    items: [],
+    supresiones: [],
+    reconciliacion: null,
+    silencio: [
+      { planta: "olivo", linea: "Nada. Le quedan unos tres meses de autonomía." },
+      { planta: "abeto", linea: "Nada. Sigue sin identificar; hasta entonces no puedo decir gran cosa." },
+      { planta: "rosal", linea: "Nada. Bajo alero, pero por el balance aún le queda margen." },
+      { planta: "aloe",  linea: "Nada. Lo regaste el jueves pasado y el depósito va por el 68 %." },
+    ],
+  },
+};
+
+/* ============================================================
+   ESTADO EN MEMORIA — sin persistencia, a propósito
+   ============================================================ */
+
+let estado = {};
+function resetEstado() { estado = { respuestas: {}, notas: {}, supresiones: {}, abiertos: {}, cursor: 0 }; }
+resetEstado();
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return n;
+};
+
+function nombrePlanta(key) {
+  const p = PLANTAS[key];
+  return p.latin
+    ? el("span", {}, p.nombre + " ", el("span", { class: "latin" }, p.latin))
+    : el("span", {}, p.nombre + " ", el("span", { class: "eyebrow" }, "sin identificar"));
+}
+
+function ecoDiario(id) {
+  const r = estado.respuestas[id];
+  if (!r) return null;
+  return el("div", { class: "diario-eco" }, "→ anotado en el diario: " + r.toLowerCase());
+}
+
+function cabecera(sem) {
+  return el("header", { class: "plan-head" },
+    el("span", { class: "eyebrow" }, "Plan semanal"),
+    el("h1", {}, sem.titulo),
+    el("span", { class: "age" + (sem.stale ? " stale" : "") }, sem.edad),
+  );
+}
+
+function bloqueAlerta(a) {
+  return el("div", { class: "alerta" },
+    el("span", { class: "eyebrow" }, "Aviso · " + a.ambito),
+    el("strong", {}, a.titulo),
+    el("p", {}, a.texto),
+    el("span", { class: "fuente" }, a.fuente),
+  );
+}
+
+function porque(item, { siempre = false } = {}) {
+  const abierto = siempre || estado.abiertos[item.id];
+  if (!abierto) {
+    return el("button", {
+      class: "link-porque",
+      onclick: () => { estado.abiertos[item.id] = true; render(); },
+    }, "¿Por qué?");
+  }
+  return el("div", { class: "porque" },
+    el("span", {}, item.razon),
+    el("div", { class: "hechos" }, item.hechos.map((h) => el("span", { class: "hecho" }, h))),
+  );
+}
+
+function botonera(item) {
+  return el("div", { class: "acciones" }, item.respuestas.map((r, i) =>
+    el("button", {
+      class: "btn" + (i === 0 && !estado.respuestas[item.id] ? " primary" : ""),
+      "aria-pressed": estado.respuestas[item.id] === r ? "true" : "false",
+      onclick: () => {
+        estado.respuestas[item.id] = estado.respuestas[item.id] === r ? undefined : r;
+        render();
+      },
+    }, r),
+  ));
+}
+
+function cajonNota(item) {
+  if (!estado.respuestas[item.id]) return null;
+  return el("textarea", {
+    class: "nota",
+    placeholder: "Añade lo que quieras (opcional)…",
+    oninput: (e) => { estado.notas[item.id] = e.target.value; },
+  }, estado.notas[item.id] || "");
+}
+
+function tarjetaSupresion(s) {
+  const decision = estado.supresiones[s.id];
+  return el("div", { class: "card suprimir" + (decision === "quitar" ? " resuelto-quitar" : "") },
+    el("div", { class: "body" },
+      el("span", { class: "eyebrow" }, "Propongo quitar esto"),
+      el("div", {},
+        el("span", { class: "plant-name" }, s.accion),
+        el("div", { class: "site" }, PLANTAS[s.planta].sitio),
+      ),
+      el("div", { class: "llm-dice" },
+        el("span", { class: "quien" }, "Por qué lo quitaría"),
+        s.llm,
+      ),
+      el("div", { class: "hechos" }, s.hechos.map((h) => el("span", { class: "hecho" }, h))),
+      el("div", { class: "acciones" },
+        el("button", {
+          class: "btn", "aria-pressed": decision === "quitar" ? "true" : "false",
+          onclick: () => { estado.supresiones[s.id] = "quitar"; render(); },
+        }, "Quítalo"),
+        el("button", {
+          class: "btn", "aria-pressed": decision === "dejar" ? "true" : "false",
+          onclick: () => { estado.supresiones[s.id] = "dejar"; render(); },
+        }, "Déjalo, lo haré"),
+      ),
+    ),
+  );
+}
+
+function tarjetaReconciliacion(r) {
+  return el("div", { class: "card" },
+    el("div", { class: "body" },
+      el("span", { class: "eyebrow" }, "No sé en qué punto está"),
+      el("div", {}, r.texto),
+      el("div", { class: "acciones" }, r.respuestas.map((t) =>
+        el("button", {
+          class: "btn",
+          "aria-pressed": estado.respuestas[r.id] === t ? "true" : "false",
+          onclick: () => { estado.respuestas[r.id] = t; render(); },
+        }, t),
+      )),
+      ecoDiario(r.id),
+    ),
+  );
+}
+
+function barraAceptar(sem) {
+  const pend = sem.supresiones.filter((s) => !estado.supresiones[s.id]).length;
+  if (!sem.supresiones.length) return null;
+  return el("div", { class: "aceptar-cambios" },
+    el("span", {}, pend ? `Queda ${pend} cambio por contestar` : "Todo contestado"),
+    el("button", { class: "btn primary", disabled: pend > 0 }, "Aceptar cambios"),
+  );
+}
+
+/* ============================================================
+   VARIANTE A — una ficha por planta, siempre las cuatro
+   ============================================================ */
+
+function VarianteA(sem) {
+  const orden = ["aloe", "abeto", "rosal", "olivo"];
+  const porPlanta = Object.fromEntries(orden.map((k) => [k, []]));
+  sem.items.forEach((i) => porPlanta[i.planta].push(i));
+  const supPorPlanta = Object.fromEntries(orden.map((k) => [k, []]));
+  sem.supresiones.forEach((s) => supPorPlanta[s.planta].push(s));
+  const silPorPlanta = Object.fromEntries(sem.silencio.map((s) => [s.planta, s.linea]));
+
+  return el("div", { style: "display:flex;flex-direction:column;gap:1rem" },
+    cabecera(sem),
+    sem.alertas.map(bloqueAlerta),
+    orden.map((k) => {
+      const items = porPlanta[k];
+      const sups = supPorPlanta[k];
+      const n = items.length;
+      const quiet = n === 0 && sups.length === 0;
+      return el("div", { class: "card a-plant" + (quiet ? " quiet" : "") },
+        el("div", { class: "a-head" },
+          el("div", {},
+            el("div", { class: "plant-name" }, nombrePlanta(k)),
+            el("div", { class: "site" }, PLANTAS[k].sitio),
+          ),
+          el("span", { class: "conteo" }, quiet ? "—" : `${n + sups.length} cosa${n + sups.length > 1 ? "s" : ""}`),
+        ),
+        el("div", { class: "body" },
+          quiet
+            ? el("div", { class: "silencio" }, silPorPlanta[k] || "Nada esta semana.")
+            : [
+                items.map((item) => el("div", { style: "display:flex;flex-direction:column;gap:.5rem" },
+                  el("div", { style: "font-size:.95rem" }, item.accion),
+                  porque(item),
+                  botonera(item),
+                  cajonNota(item),
+                  ecoDiario(item.id),
+                )),
+                sups.map((s) => el("div", { class: "llm-dice", style: "margin-top:.2rem" },
+                  el("span", { class: "quien" }, "Propongo quitar: " + s.accion),
+                  s.llm,
+                  el("div", { class: "acciones", style: "margin-top:.5rem" },
+                    el("button", {
+                      class: "btn", "aria-pressed": estado.supresiones[s.id] === "quitar" ? "true" : "false",
+                      onclick: () => { estado.supresiones[s.id] = "quitar"; render(); },
+                    }, "Quítalo"),
+                    el("button", {
+                      class: "btn", "aria-pressed": estado.supresiones[s.id] === "dejar" ? "true" : "false",
+                      onclick: () => { estado.supresiones[s.id] = "dejar"; render(); },
+                    }, "Déjalo"),
+                  ),
+                )),
+              ],
+        ),
+      );
+    }),
+    sem.reconciliacion && tarjetaReconciliacion(sem.reconciliacion),
+    barraAceptar(sem),
+  );
+}
+
+/* ============================================================
+   VARIANTE B — agrupado por acción, silencio plegado al pie
+   ============================================================ */
+
+const VERBOS = {
+  water:    "Riega",
+  divide:   "Mira y contéstame",
+  identify: "Ficha de la planta",
+};
+
+function VarianteB(sem) {
+  const grupos = {};
+  sem.items.forEach((i) => (grupos[i.verbo] ||= []).push(i));
+
+  return el("div", { style: "display:flex;flex-direction:column;gap:1.1rem" },
+    cabecera(sem),
+    sem.alertas.map(bloqueAlerta),
+
+    sem.items.length === 0 && sem.supresiones.length === 0
+      ? el("div", { class: "card" }, el("div", { class: "body" },
+          el("div", { class: "plant-name" }, "Nada que hacer"),
+          el("div", { class: "silencio" }, "Las cuatro plantas están servidas esta semana."),
+        ))
+      : null,
+
+    Object.entries(grupos).map(([verbo, items]) =>
+      el("div", { class: "grupo" },
+        el("div", { class: "grupo-head" }, `${VERBOS[verbo] || verbo} · ${items.length}`),
+        items.map((item) => {
+          const hecho = estado.respuestas[item.id] ? "1" : "0";
+          return el("div", { class: "fila", "data-hecho": hecho },
+            el("button", {
+              class: "tick", "aria-label": "Marcar hecho",
+              onclick: () => {
+                estado.respuestas[item.id] = estado.respuestas[item.id] ? undefined : item.respuestas[0];
+                render();
+              },
+            }, "✓"),
+            el("div", { class: "fila-txt" },
+              item.corto,
+              el("small", {}, nombrePlanta(item.planta)),
+              estado.abiertos[item.id]
+                ? el("div", { style: "margin-top:.5rem" }, porque(item, { siempre: true }))
+                : el("button", {
+                    class: "link-porque", style: "margin-top:.35rem",
+                    onclick: () => { estado.abiertos[item.id] = true; render(); },
+                  }, "¿Por qué?"),
+              estado.respuestas[item.id] ? el("div", { style: "margin-top:.5rem" }, cajonNota(item)) : null,
+            ),
+          );
+        }),
+      ),
+    ),
+
+    sem.supresiones.length
+      ? el("div", { class: "grupo" },
+          el("div", { class: "grupo-head" }, `Propongo quitar · ${sem.supresiones.length}`),
+          sem.supresiones.map(tarjetaSupresion),
+        )
+      : null,
+
+    sem.reconciliacion && tarjetaReconciliacion(sem.reconciliacion),
+
+    el("details", { class: "plegado" },
+      el("summary", {}, `${sem.silencio.length} planta${sem.silencio.length > 1 ? "s" : ""} sin nada que hacer`),
+      el("div", {}, sem.silencio.map((s) =>
+        el("div", { class: "silencio" },
+          el("strong", { style: "font-weight:600;color:var(--ink)" }, nombrePlanta(s.planta)),
+          " — " + s.linea,
+        ),
+      )),
+    ),
+
+    barraAceptar(sem),
+  );
+}
+
+/* ============================================================
+   VARIANTE C — una cosa a la vez, en cola
+   ============================================================ */
+
+function VarianteC(sem) {
+  const cola = [
+    ...sem.alertas.map((a) => ({ tipo: "alerta", data: a })),
+    ...(sem.reconciliacion ? [{ tipo: "recon", data: sem.reconciliacion }] : []),
+    ...sem.items.map((i) => ({ tipo: "item", data: i })),
+    ...sem.supresiones.map((s) => ({ tipo: "sup", data: s })),
+  ];
+  const total = cola.length;
+  const i = Math.min(estado.cursor, total);
+  const enCierre = i >= total;
+
+  const avanzar = () => { estado.cursor = Math.min(estado.cursor + 1, total); render(); };
+  const retroceder = () => { estado.cursor = Math.max(estado.cursor - 1, 0); render(); };
+
+  const progreso = el("div", { class: "progreso" },
+    el("span", { class: "num", style: "font-size:.72rem;color:var(--muted)" },
+      enCierre ? "fin" : `${i + 1}/${total}`),
+    el("div", { class: "barras" }, cola.map((_, k) =>
+      el("i", { class: k < i ? "done" : k === i ? "now" : "" }))),
+  );
+
+  let cuerpo;
+  if (enCierre) {
+    cuerpo = el("div", { class: "c-card c-cierre" },
+      el("span", { class: "eyebrow" }, total ? "Has llegado al final" : "Esta semana no hay nada"),
+      el("div", { class: "c-verbo" }, total ? "Ya está." : "Nada que hacer."),
+      el("div", { class: "silencio" }, "Y de las demás, esto es lo que sé:"),
+      ...sem.silencio.map((s) => el("div", { class: "silencio" },
+        el("strong", { style: "font-weight:600;color:var(--ink)" }, nombrePlanta(s.planta)),
+        " — " + s.linea,
+      )),
+      total ? el("button", { class: "btn", style: "align-self:flex-start", onclick: retroceder }, "← Volver atrás") : null,
+    );
+  } else {
+    const paso = cola[i];
+    if (paso.tipo === "alerta") {
+      const a = paso.data;
+      cuerpo = el("div", { class: "c-card aviso" },
+        el("span", { class: "eyebrow", style: "color:var(--warn)" }, "Aviso · " + a.ambito),
+        el("div", { class: "c-verbo" }, a.titulo),
+        el("div", { class: "c-razon" }, a.texto),
+        el("span", { class: "fuente" }, a.fuente),
+        el("div", { class: "c-nav", style: "margin-top:auto" },
+          el("button", { class: "btn big primary", onclick: avanzar }, "Entendido"),
+        ),
+      );
+    } else if (paso.tipo === "recon") {
+      const r = paso.data;
+      cuerpo = el("div", { class: "c-card" },
+        el("span", { class: "eyebrow" }, "No sé en qué punto está"),
+        el("div", { class: "c-verbo" }, "¿Cómo está el aloe?"),
+        el("div", { class: "c-razon" }, r.texto),
+        el("div", { style: "display:flex;flex-direction:column;gap:.4rem;margin-top:auto" },
+          ...r.respuestas.map((t) => el("button", {
+            class: "btn big", "aria-pressed": estado.respuestas[r.id] === t ? "true" : "false",
+            onclick: () => { estado.respuestas[r.id] = t; avanzar(); },
+          }, t)),
+        ),
+      );
+    } else if (paso.tipo === "sup") {
+      const s = paso.data;
+      cuerpo = el("div", { class: "c-card" },
+        el("span", { class: "eyebrow" }, "Propongo quitar esto"),
+        el("div", { class: "c-verbo", style: "text-decoration:line-through;text-decoration-color:var(--muted)" }, s.accion),
+        el("div", { class: "c-razon" }, s.llm),
+        el("div", { class: "hechos" }, s.hechos.map((h) => el("span", { class: "hecho" }, h))),
+        el("div", { class: "c-nav", style: "margin-top:auto" },
+          el("button", { class: "btn big", onclick: () => { estado.supresiones[s.id] = "quitar"; avanzar(); } }, "Quítalo"),
+          el("button", { class: "btn big", onclick: () => { estado.supresiones[s.id] = "dejar"; avanzar(); } }, "Déjalo"),
+        ),
+      );
+    } else {
+      const item = paso.data;
+      cuerpo = el("div", { class: "c-card" },
+        el("span", { class: "eyebrow" }, nombrePlanta(item.planta).textContent + " · " + PLANTAS[item.planta].sitio),
+        el("div", { class: "c-verbo" }, item.accion),
+        el("div", { class: "c-razon" }, item.razon),
+        el("div", { class: "hechos" }, item.hechos.map((h) => el("span", { class: "hecho" }, h))),
+        el("textarea", {
+          class: "nota",
+          placeholder: "¿Algo que contar de esta planta?",
+          oninput: (e) => { estado.notas[item.id] = e.target.value; },
+        }, estado.notas[item.id] || ""),
+        el("div", { style: "display:flex;flex-direction:column;gap:.4rem;margin-top:auto" },
+          ...item.respuestas.map((t, k) => el("button", {
+            class: "btn big" + (k === 0 ? " primary" : ""),
+            onclick: () => { estado.respuestas[item.id] = t; avanzar(); },
+          }, t)),
+        ),
+      );
+    }
+  }
+
+  return el("div", { class: "c-wrap" },
+    cabecera(sem),
+    progreso,
+    cuerpo,
+    !enCierre && i > 0
+      ? el("button", { class: "btn", style: "align-self:flex-start", onclick: retroceder }, "← Atrás")
+      : null,
+  );
+}
+
+/* ============================================================
+   CONMUTADOR
+   ============================================================ */
+
+const VARIANTES = [
+  ["A", "Ficha por planta", VarianteA],
+  ["B", "Agrupado por acción", VarianteB],
+  ["C", "Una cosa a la vez", VarianteC],
+];
+
+/* El estado del conmutador vive en memoria: el visor de Artifacts descarta el
+   query string, así que la URL sola no basta. Se sigue escribiendo por si el
+   fichero se abre suelto, pero nunca se lee como fuente de verdad. */
+const inicial = new URLSearchParams(location.search);
+const vIni = (inicial.get("variant") || "A").toUpperCase();
+let actual = {
+  v: ["A", "B", "C"].includes(vIni) ? vIni : "A",
+  s: inicial.get("semana") === "vacia" ? "vacia" : "llena",
+};
+
+function params() { return actual; }
+
+function ir(v, s) {
+  actual = { v, s };
+  try { history.replaceState(null, "", `?variant=${v}&semana=${s}`); } catch (_) { /* sandbox */ }
+  resetEstado();
+  render();
+}
+
+function render() {
+  const { v, s } = params();
+  const [, nombre, Comp] = VARIANTES.find(([k]) => k === v);
+  const app = document.getElementById("app");
+  app.replaceChildren(Comp(SEMANAS[s]));
+  document.getElementById("vlabel").textContent = `${v} — ${nombre}`;
+  document.querySelectorAll("#semana-seg button").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.semana === s ? "true" : "false");
+  });
+}
+
+function ciclar(paso) {
+  const { v, s } = params();
+  const idx = VARIANTES.findIndex(([k]) => k === v);
+  ir(VARIANTES[(idx + paso + VARIANTES.length) % VARIANTES.length][0], s);
+}
+
+document.getElementById("prev").onclick = () => ciclar(-1);
+document.getElementById("next").onclick = () => ciclar(1);
+document.querySelectorAll("#semana-seg button").forEach((b) => {
+  b.onclick = () => ir(params().v, b.dataset.semana);
+});
+addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+  if (e.key === "ArrowLeft") ciclar(-1);
+  if (e.key === "ArrowRight") ciclar(1);
+});
+
+render();
+</script>
