@@ -20,9 +20,21 @@ _Avoid_: Species, taxonomy
 Estado de una Plant que aún no tiene Taxon. Es un estado legítimo y reintentable, nunca un requisito de alta.
 _Avoid_: Unknown, pending identification
 
+**CareFact** (hecho de cuidado):
+Un valor de cuidado con su fuente, su frase literal y el sujeto del que la fuente lo dijo. Es la unidad de almacenamiento y la unidad que el LLM cita: una fila, un hecho. Su valor se guarda en la escala nativa de la fuente y se lee como intervalo, nunca como punto.
+_Avoid_: Care attribute, trait, care row
+
 **CareProfile** (perfil de cuidado):
-Los hechos citables de cuidado de un Taxon. Cuelga del rango donde la fuente los tenga, que no siempre es el rango al que se identificó la planta.
+Los hechos de cuidado de una Plant una vez resueltos: qué CareFact gana cada campo, a qué rango se encontró y qué campos quedan ausentes. Es una **vista**, no una tabla — no se lee, se resuelve.
 _Avoid_: Care sheet, species data, care requirements
+
+**Absent** (ausente):
+Estado de un campo del CareProfile para el que ninguna fuente da valor. Apaga el motor para ese campo en vez de caer a un valor por defecto, y guarda por qué falta: sin evaluar, no apta para la región, o nombre no verificado.
+_Avoid_: Null, missing, unknown value
+
+**FunctionalGroup** (grupo funcional):
+Un conjunto de plantas que comparten consejos de protección sin compartir taxón — se puede asignar sin identificar la planta. Es el otro sujeto posible de un CareFact, junto al Taxon. Su vocabulario aún no está fijado.
+_Avoid_: Category, plant type, family
 
 **Site** (sitio):
 El lugar donde vive una Plant, con lo que es propio del lugar: interior o exterior, cuánta lluvia le llega y su microclima. La exposición solar no es del Site sino de la Plant, porque varía dentro de un mismo cuarto.
