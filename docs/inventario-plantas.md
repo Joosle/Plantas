@@ -45,7 +45,7 @@ El único hueco real es el abeto.
 
 ### Detalle por planta
 
-**El olivo del jardín este.** Árbol arraigado, en suelo, sin riego. Nombre común
+**El olivo del jardín este.** Árbol establecido, emplazamiento `suelo`, sin riego. Nombre común
 inequívoco en España; match GBIF `EXACT`, confianza 97.
 
 **El abeto.** `Unidentified`. "Abeto" en español de jardín cubre *Abies*, *Picea abies*
@@ -70,9 +70,17 @@ alto**. Derivados para el modo maceta del modelo hídrico:
 ## Lo que esta lista dice del proyecto
 
 **Hoy no se riega nada.** Los dos jardines viven sólo de la lluvia y ambos árboles vinieron
-con la casa, así que están arraigados. De las 4 plantas, 3 están en suelo, arraigadas y sin
-aporte de agua; la única con decisión de riego real es el aloe, que además es la más
-resistente a la sequía de la casa (`ks` muy bajo en WUCOLS).
+con la casa, así que llevan años establecidos. De las 4 plantas, 3 tienen emplazamiento
+`suelo` y no reciben aporte de agua; la única con decisión de riego real es el aloe, que
+además es la más resistente a la sequía de la casa (`ks` muy bajo en WUCOLS).
+
+> **Corrección de vocabulario ([#16](https://github.com/Joosle/Plantas/issues/16)).** Esta
+> lista decía «arraigadas» de las tres plantas de suelo, y el término estaba mal usado.
+> **Arraigo** es el acomodamiento a un medio nuevo tras plantar o trasplantar, dura semanas
+> y ocurre igual en tiesto que en tierra; **ninguna** de las cuatro plantas de la casa está
+> en arraigo. Que las tres de suelo no se rieguen no es un estado que compartan: es
+> aritmética del depósito, ~99 días de autonomía en suelo frente a poco más de un día en
+> los 7,5 L del aloe. Ver el [ADR 0008](adr/0008-emplazamiento-y-arraigo-son-ejes-distintos.md).
 
 Consecuencia para el mapa: **el motor de riego semanal, sobre el inventario de hoy, tiene
 una planta sobre la que actuar.** No invalida lo decidido en

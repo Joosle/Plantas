@@ -28,6 +28,18 @@ _Avoid_: Care sheet, species data, care requirements
 El lugar donde vive una Plant, con lo que es propio del lugar: interior o exterior, cuánta lluvia le llega y su microclima. La exposición solar no es del Site sino de la Plant, porque varía dentro de un mismo cuarto.
 _Avoid_: Location, place, spot, room
 
+**Placement** (emplazamiento):
+Dónde está plantada una Plant — suelo, bancal, maceta o jardinera. Es de la Plant y no del Site, porque dos plantas del mismo sitio pueden estar una en tierra y otra en tiesto. Decide qué ecuación de balance corre y por dónde entra la lluvia.
+_Avoid_: Container, pot, medio, tipo de emplazamiento
+
+**Establishing** (en arraigo):
+Una Plant que todavía se está acomodando a un medio nuevo, tras plantarla o trasplantarla. Ocurre igual en suelo que en maceta, así que no se deduce del Placement. Mientras dura, el depósito del balance es el cepellón y no el medio.
+_Avoid_: Arraigada, establecida, rooted, settling
+
+**Root ball** (cepellón):
+El volumen de sustrato que trajo la Plant consigo. Es el depósito real mientras dura el arraigo, y por eso una planta recién puesta se seca rodeada de tierra húmeda.
+_Avoid_: Bola de raíces, root mass
+
 **Archived** (archivada):
 Plant que ya no está al cuidado del usuario, con el motivo por el que se fue. Sale de planes y alertas; conserva su diario íntegro.
 _Avoid_: Deleted, inactive, removed
