@@ -3,10 +3,14 @@
   PROTOTIPO DESECHABLE — ticket #11. No es código de producción.
 
   "Cuatro variantes de la pantalla del plan semanal, conmutables con ?variant=,
-   cruzadas con ?semana= (llena | vacia)."
+   cruzadas con ?semana= (llena | vacia) y con ?duda= (tecnica | llana | foto)."
 
   La D nació de la reacción a las tres primeras: B gana, pero las decisiones
   van delante porque condicionan la lista de tareas.
+
+  El eje ?duda= nació de la siguiente: el texto del rosal era demasiado técnico.
+  «llana» lo dice como se lo dirías a un vecino; «por foto» va más lejos y no te
+  pide arbitrar el argumento, sino aportar una foto para que decida el sistema.
 
   Datos: las 4 plantas reales de docs/inventario-plantas.md.
   Sin persistencia: todo el estado vive en memoria y se pierde al recargar.
@@ -249,6 +253,18 @@
   details.plegado[open] > summary::before { content: "▾"; }
   details.plegado > div { padding-top: .6rem; display: flex; flex-direction: column; gap: .45rem; }
 
+  /* marco de la foto simulada — no hay cámara en el prototipo */
+  .foto-marco {
+    aspect-ratio: 4 / 3; max-height: 190px;
+    background: var(--sunken); border: 1px solid var(--hair); border-radius: 8px;
+    display: grid; place-items: center;
+    background-image: repeating-linear-gradient(45deg, transparent 0 9px, var(--hair) 9px 10px);
+  }
+  .foto-marco span {
+    font-family: var(--mono); font-size: .68rem; color: var(--muted);
+    background: var(--surface); padding: .25rem .5rem; border-radius: 5px;
+  }
+
   /* --- variante D: B con las decisiones delante --- */
   .decidir {
     background: var(--sunken); border: 1px solid var(--hair);
@@ -323,6 +339,11 @@
     <button data-semana="llena">semana llena</button>
     <button data-semana="vacia">semana vacía</button>
   </div>
+  <div class="row seg" id="duda-seg">
+    <button data-duda="tecnica">técnica</button>
+    <button data-duda="llana">llana</button>
+    <button data-duda="foto">por foto</button>
+  </div>
   <div class="hint">prototipo · #11 · ← → para cambiar</div>
 </div>
 
@@ -348,6 +369,7 @@ const SEMANAS = {
       titulo: "Aviso amarillo por temperaturas máximas",
       texto: "Se esperan 37 °C o más de martes a jueves. El aloe de la terraza suroeste da al sol de tarde.",
       fuente: "AEMET · zona 681903 Alcarria de Guadalajara · vigente hasta el jue 21:00",
+      fuenteLlana: "Lo avisa AEMET para Guadalajara · vale hasta el jueves a las 21:00",
     }],
     items: [
       {
@@ -355,7 +377,9 @@ const SEMANAS = {
         planta: "aloe", verbo: "water", accion: "Riega el aloe a fondo",
         corto: "Riégalo a fondo",
         razon: "El depósito de la maceta bajó al 22 % el miércoles. Con las máximas previstas se vacía antes del domingo.",
+        razonLlana: "El miércoles la maceta estaba ya casi seca, y con el calor que viene no aguanta hasta el domingo.",
         hechos: ["ks Aloe · WUCOLS (género)", "ET0 · Open-Meteo 10–16 ago"],
+        hechosLlanos: ["Un aloe bebe poco", "Vienen días de mucho calor"],
         respuestas: ["Hecho", "Le eché poco", "No"],
         pregunta: false,
       },
@@ -364,7 +388,9 @@ const SEMANAS = {
         planta: "aloe", verbo: "divide", accion: "¿Tiene hijuelos de más de un palmo?",
         corto: "Mira si tiene hijuelos",
         razon: "Si los hay, se separan ahora y no en octubre. No lo sé desde aquí: hay que mirarlo.",
+        razonLlana: "Si le han salido brotes al pie, se separan ahora; en octubre ya es tarde. Eso no lo veo yo desde aquí.",
         hechos: ["Separación de hijuelos · IVIA (género)"],
+        hechosLlanos: ["Es la época de separarlos"],
         respuestas: ["Sí, los tiene", "No", "No lo he mirado"],
         pregunta: true,
       },
@@ -373,7 +399,9 @@ const SEMANAS = {
         planta: "abeto", verbo: "identify", accion: "El abeto sigue sin identificar",
         corto: "Hazle una foto",
         razon: "Sin nombre no tengo su temperatura mínima, así que en enero no sabré si avisarte de la helada.",
+        razonLlana: "Mientras no sepa qué abeto es, no sé cuánto frío aguanta, y en enero no podré avisarte de una helada.",
         hechos: ["Sin taxón", "Rusticidad ausente"],
+        hechosLlanos: ["Todavía no sé qué es"],
         respuestas: ["Hacer foto", "Ahora no"],
         pregunta: false,
       },
@@ -382,7 +410,17 @@ const SEMANAS = {
       id: "rosal-riego",
       planta: "rosal", verbo: "water", accion: "Riega el rosal",
       llm: "Lo propuse por el balance: está bajo alero y no le llegó la lluvia del día 8. Pero su coeficiente está sin determinar entre 0,10 y 0,60, y por el extremo bajo aún le quedan tres semanas. Yo lo quitaría. Si lo ves mustio, déjalo y me habré equivocado.",
+      llmLlano: "Lo puse porque el rosal está pegado a la fachada, bajo el alero, y la lluvia del sábado no le llegó. Pero no sé cuánta agua pide un rosal como el tuyo: hay rosales que beben bastante y otros que casi nada. Si es de los que beben poco, aún le queda para tres semanas. Yo lo quitaría. Si lo ves mustio, déjalo y me habré equivocado.",
       hechos: ["KL Rosa · 0,10–0,60 (género)", "Lluvia 8 ago · no interceptada"],
+      hechosLlanos: ["No sé cuánta agua pide un rosal", "La lluvia del sábado no le llegó"],
+      foto: {
+        linea: "Creo que a este rosal no le hace falta agua todavía, pero no lo tengo claro. Con una foto lo veo y lo decido yo.",
+        cta: "Hazle una foto",
+        pie: "También puedes decidirlo tú",
+        placeholder: "Foto del rosal · hace un momento",
+        veredicto: "Ya está. Las hojas están firmes, sin bordes caídos, y la tierra bajo el alero se ve oscura. Lo quito del plan y te lo vuelvo a mirar el domingo que viene.",
+        confirmar: ["Vale", "No, riégalo igual"],
+      },
     }],
     reconciliacion: {
       id: "aloe-silencio",
@@ -419,7 +457,7 @@ const SEMANAS = {
    ============================================================ */
 
 let estado = {};
-function resetEstado() { estado = { respuestas: {}, notas: {}, supresiones: {}, abiertos: {}, cursor: 0 }; }
+function resetEstado() { estado = { respuestas: {}, notas: {}, supresiones: {}, abiertos: {}, fotos: {}, manual: {}, cursor: 0 }; }
 resetEstado();
 
 /* ============================================================
@@ -440,6 +478,17 @@ const el = (tag, attrs = {}, ...kids) => {
   }
   return n;
 };
+
+/* --- registro: cómo se cuenta la duda ---------------------------------
+   tecnica → el texto tal cual lo escupiría el motor (coeficientes, siglas)
+   llana   → lo mismo dicho como se lo dirías a un vecino
+   foto    → llana, y la supresión no se argumenta: se resuelve con una foto
+   -------------------------------------------------------------------- */
+function llano() { return params().d !== "tecnica"; }
+function txtRazon(item)  { return llano() && item.razonLlana  ? item.razonLlana  : item.razon; }
+function txtHechos(item) { return llano() && item.hechosLlanos ? item.hechosLlanos : item.hechos; }
+function txtLlm(s)       { return llano() && s.llmLlano        ? s.llmLlano       : s.llm; }
+function txtFuente(a)    { return llano() && a.fuenteLlana     ? a.fuenteLlana    : a.fuente; }
 
 function nombrePlanta(key) {
   const p = PLANTAS[key];
@@ -467,7 +516,7 @@ function bloqueAlerta(a) {
     el("span", { class: "eyebrow" }, "Aviso · " + a.ambito),
     el("strong", {}, a.titulo),
     el("p", {}, a.texto),
-    el("span", { class: "fuente" }, a.fuente),
+    el("span", { class: "fuente" }, txtFuente(a)),
   );
 }
 
@@ -480,8 +529,8 @@ function porque(item, { siempre = false } = {}) {
     }, "¿Por qué?");
   }
   return el("div", { class: "porque" },
-    el("span", {}, item.razon),
-    el("div", { class: "hechos" }, item.hechos.map((h) => el("span", { class: "hecho" }, h))),
+    el("span", {}, txtRazon(item)),
+    el("div", { class: "hechos" }, txtHechos(item).map((h) => el("span", { class: "hecho" }, h))),
   );
 }
 
@@ -507,7 +556,60 @@ function cajonNota(item) {
   }, estado.notas[item.id] || "");
 }
 
+/* Modo foto: en vez de pedirte que arbitres un argumento que no puedes juzgar,
+   te pide una observación —una foto— y la decisión la toma el sistema. Aquí va
+   simulada: no hay cámara, el veredicto está escrito a mano. */
+function supresionPorFoto(s) {
+  const f = s.foto;
+  const hecha = estado.fotos[s.id];
+  const decision = estado.supresiones[s.id];
+
+  if (estado.manual[s.id]) return supresionArgumentada(s);
+
+  return el("div", { class: "card suprimir" + (decision === "quitar" ? " resuelto-quitar" : "") },
+    el("div", { class: "body" },
+      el("span", { class: "eyebrow" }, "No lo tengo claro"),
+      el("div", {},
+        el("span", { class: "plant-name" }, s.accion),
+        el("div", { class: "site" }, PLANTAS[s.planta].sitio),
+      ),
+      el("div", {}, f.linea),
+
+      hecha
+        ? el("div", { style: "display:flex;flex-direction:column;gap:.6rem" },
+            el("div", { class: "foto-marco" }, el("span", {}, f.placeholder)),
+            el("div", { class: "llm-dice" },
+              el("span", { class: "quien" }, "Lo que veo"),
+              f.veredicto,
+            ),
+            el("div", { class: "acciones" }, f.confirmar.map((t, i) =>
+              el("button", {
+                class: "btn" + (i === 0 && !decision ? " primary" : ""),
+                "aria-pressed": decision === (i === 0 ? "quitar" : "dejar") ? "true" : "false",
+                onclick: () => { estado.supresiones[s.id] = i === 0 ? "quitar" : "dejar"; render(); },
+              }, t),
+            )),
+          )
+        : el("div", { style: "display:flex;flex-direction:column;gap:.5rem;align-items:flex-start" },
+            el("button", {
+              class: "btn primary",
+              onclick: () => { estado.fotos[s.id] = true; render(); },
+            }, "📷 " + f.cta),
+            el("button", {
+              class: "link-porque",
+              onclick: () => { estado.manual[s.id] = true; render(); },
+            }, f.pie),
+          ),
+    ),
+  );
+}
+
 function tarjetaSupresion(s) {
+  if (params().d === "foto" && s.foto) return supresionPorFoto(s);
+  return supresionArgumentada(s);
+}
+
+function supresionArgumentada(s) {
   const decision = estado.supresiones[s.id];
   return el("div", { class: "card suprimir" + (decision === "quitar" ? " resuelto-quitar" : "") },
     el("div", { class: "body" },
@@ -518,9 +620,9 @@ function tarjetaSupresion(s) {
       ),
       el("div", { class: "llm-dice" },
         el("span", { class: "quien" }, "Por qué lo quitaría"),
-        s.llm,
+        txtLlm(s),
       ),
-      el("div", { class: "hechos" }, s.hechos.map((h) => el("span", { class: "hecho" }, h))),
+      el("div", { class: "hechos" }, txtHechos(s).map((h) => el("span", { class: "hecho" }, h))),
       el("div", { class: "acciones" },
         el("button", {
           class: "btn", "aria-pressed": decision === "quitar" ? "true" : "false",
@@ -602,7 +704,7 @@ function VarianteA(sem) {
                 )),
                 sups.map((s) => el("div", { class: "llm-dice", style: "margin-top:.2rem" },
                   el("span", { class: "quien" }, "Propongo quitar: " + s.accion),
-                  s.llm,
+                  txtLlm(s),
                   el("div", { class: "acciones", style: "margin-top:.5rem" },
                     el("button", {
                       class: "btn", "aria-pressed": estado.supresiones[s.id] === "quitar" ? "true" : "false",
@@ -878,7 +980,7 @@ function VarianteC(sem) {
         el("span", { class: "eyebrow", style: "color:var(--warn)" }, "Aviso · " + a.ambito),
         el("div", { class: "c-verbo" }, a.titulo),
         el("div", { class: "c-razon" }, a.texto),
-        el("span", { class: "fuente" }, a.fuente),
+        el("span", { class: "fuente" }, txtFuente(a)),
         el("div", { class: "c-nav", style: "margin-top:auto" },
           el("button", { class: "btn big primary", onclick: avanzar }, "Entendido"),
         ),
@@ -901,8 +1003,8 @@ function VarianteC(sem) {
       cuerpo = el("div", { class: "c-card" },
         el("span", { class: "eyebrow" }, "Propongo quitar esto"),
         el("div", { class: "c-verbo", style: "text-decoration:line-through;text-decoration-color:var(--muted)" }, s.accion),
-        el("div", { class: "c-razon" }, s.llm),
-        el("div", { class: "hechos" }, s.hechos.map((h) => el("span", { class: "hecho" }, h))),
+        el("div", { class: "c-razon" }, txtLlm(s)),
+        el("div", { class: "hechos" }, txtHechos(s).map((h) => el("span", { class: "hecho" }, h))),
         el("div", { class: "c-nav", style: "margin-top:auto" },
           el("button", { class: "btn big", onclick: () => { estado.supresiones[s.id] = "quitar"; avanzar(); } }, "Quítalo"),
           el("button", { class: "btn big", onclick: () => { estado.supresiones[s.id] = "dejar"; avanzar(); } }, "Déjalo"),
@@ -913,8 +1015,8 @@ function VarianteC(sem) {
       cuerpo = el("div", { class: "c-card" },
         el("span", { class: "eyebrow" }, nombrePlanta(item.planta).textContent + " · " + PLANTAS[item.planta].sitio),
         el("div", { class: "c-verbo" }, item.accion),
-        el("div", { class: "c-razon" }, item.razon),
-        el("div", { class: "hechos" }, item.hechos.map((h) => el("span", { class: "hecho" }, h))),
+        el("div", { class: "c-razon" }, txtRazon(item)),
+        el("div", { class: "hechos" }, txtHechos(item).map((h) => el("span", { class: "hecho" }, h))),
         el("textarea", {
           class: "nota",
           placeholder: "¿Algo que contar de esta planta?",
@@ -956,28 +1058,35 @@ const VARIANTES = [
    fichero se abre suelto, pero nunca se lee como fuente de verdad. */
 const inicial = new URLSearchParams(location.search);
 const vIni = (inicial.get("variant") || "D").toUpperCase();
+const dIni = inicial.get("duda");
 let actual = {
   v: VARIANTES.some(([k]) => k === vIni) ? vIni : "D",
   s: inicial.get("semana") === "vacia" ? "vacia" : "llena",
+  d: ["tecnica", "llana", "foto"].includes(dIni) ? dIni : "llana",
 };
 
 function params() { return actual; }
 
-function ir(v, s) {
-  actual = { v, s };
-  try { history.replaceState(null, "", `?variant=${v}&semana=${s}`); } catch (_) { /* sandbox */ }
+function ir(v, s, d) {
+  actual = { v, s, d: d || actual.d };
+  try {
+    history.replaceState(null, "", `?variant=${v}&semana=${s}&duda=${actual.d}`);
+  } catch (_) { /* sandbox */ }
   resetEstado();
   render();
 }
 
 function render() {
-  const { v, s } = params();
+  const { v, s, d } = params();
   const [, nombre, Comp] = VARIANTES.find(([k]) => k === v);
   const app = document.getElementById("app");
   app.replaceChildren(Comp(SEMANAS[s]));
   document.getElementById("vlabel").textContent = `${v} — ${nombre}`;
   document.querySelectorAll("#semana-seg button").forEach((b) => {
     b.setAttribute("aria-current", b.dataset.semana === s ? "true" : "false");
+  });
+  document.querySelectorAll("#duda-seg button").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.duda === d ? "true" : "false");
   });
 }
 
@@ -991,6 +1100,9 @@ document.getElementById("prev").onclick = () => ciclar(-1);
 document.getElementById("next").onclick = () => ciclar(1);
 document.querySelectorAll("#semana-seg button").forEach((b) => {
   b.onclick = () => ir(params().v, b.dataset.semana);
+});
+document.querySelectorAll("#duda-seg button").forEach((b) => {
+  b.onclick = () => ir(params().v, params().s, b.dataset.duda);
 });
 addEventListener("keydown", (e) => {
   const t = e.target;
