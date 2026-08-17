@@ -2,8 +2,11 @@
 <!--
   PROTOTIPO DESECHABLE — ticket #11. No es código de producción.
 
-  "Tres variantes de la pantalla del plan semanal, conmutables con ?variant=,
+  "Cuatro variantes de la pantalla del plan semanal, conmutables con ?variant=,
    cruzadas con ?semana= (llena | vacia)."
+
+  La D nació de la reacción a las tres primeras: B gana, pero las decisiones
+  van delante porque condicionan la lista de tareas.
 
   Datos: las 4 plantas reales de docs/inventario-plantas.md.
   Sin persistencia: todo el estado vive en memoria y se pierde al recargar.
@@ -245,6 +248,29 @@
   details.plegado > summary::before { content: "▸"; font-size: .7rem; }
   details.plegado[open] > summary::before { content: "▾"; }
   details.plegado > div { padding-top: .6rem; display: flex; flex-direction: column; gap: .45rem; }
+
+  /* --- variante D: B con las decisiones delante --- */
+  .decidir {
+    background: var(--sunken); border: 1px solid var(--hair);
+    border-radius: var(--r); padding: .85rem .8rem;
+    display: flex; flex-direction: column; gap: .7rem;
+  }
+  .decidir > .card { background: var(--surface); }
+  .d-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+  .d-cabeza h2 {
+    font-family: var(--serif); font-size: 1.05rem; font-weight: 600; margin: 0;
+  }
+  .d-pend { font-family: var(--mono); font-size: .7rem; color: var(--muted); white-space: nowrap; }
+  .d-listo { color: var(--accent); }
+  .lista-cond { transition: opacity .18s ease; }
+  .lista-cond[data-pendiente="1"] { opacity: .45; }
+  .cond-aviso {
+    font-size: .8rem; color: var(--muted); font-style: italic;
+    border-left: 2px solid var(--hair); padding-left: .55rem;
+  }
+  .fila.fantasma { border-style: dashed; opacity: .7; }
+  .fila.fantasma .tick { visibility: hidden; }
+  .fila-efecto { display: block; font-size: .74rem; color: var(--accent); margin-top: .3rem; }
 
   /* --- variante C: una cosa a la vez --- */
   .c-wrap { display: flex; flex-direction: column; gap: 1rem; min-height: 60vh; }
@@ -675,6 +701,139 @@ function VarianteB(sem) {
 }
 
 /* ============================================================
+   VARIANTE D — la B, pero con las decisiones delante
+
+   La lista de tareas es consecuencia de lo que decidas arriba, así que
+   se enseña esa dependencia en vez de dejarla implícita: mientras queden
+   decisiones sin contestar la lista va atenuada, y las tareas que dependen
+   de una decisión salen en gris punteado hasta que la contestas.
+   ============================================================ */
+
+/* Qué tarea normal queda en el aire por cada decisión. En el prototipo va a mano. */
+const DEPENDE = { "aloe-silencio": "aloe-riego" };
+
+function VarianteD(sem) {
+  const sups = sem.supresiones;
+  const recon = sem.reconciliacion;
+  const nDecisiones = sups.length + (recon ? 1 : 0);
+  const pend = sups.filter((s) => !estado.supresiones[s.id]).length
+             + (recon && !estado.respuestas[recon.id] ? 1 : 0);
+
+  const reconResp = recon ? estado.respuestas[recon.id] : undefined;
+  const afectada = recon ? DEPENDE[recon.id] : null;
+
+  const efectoItem = (item) => {
+    if (item.id !== afectada) return {};
+    if (!reconResp) return { fantasma: true, nota: "Depende de lo que me contestes arriba sobre el aloe." };
+    if (reconResp === "Está seco") return { nota: "Sigue en pie: me dijiste que está seco." };
+    if (reconResp === "Está húmedo") return { fuera: true, nota: "Fuera: me dijiste que está húmedo." };
+    return { fuera: true, nota: "Fuera: lo regaste tú el jueves." };
+  };
+
+  const grupos = {};
+  const retirados = [];
+  const mete = (verbo, fila) => (grupos[verbo] ||= []).push(fila);
+
+  sem.items.forEach((item) => {
+    const e = efectoItem(item);
+    if (e.fuera) retirados.push({ item, nota: e.nota });
+    else mete(item.verbo, { item, ...e });
+  });
+
+  sups.forEach((s) => {
+    const d = estado.supresiones[s.id];
+    if (d === "quitar") retirados.push({ item: s, nota: "Fuera: aceptaste quitarlo." });
+    else if (d === "dejar") mete(s.verbo, { item: s, nota: "Lo dejaste tú, contra mi propuesta." });
+    else mete(s.verbo, { item: s, fantasma: true, nota: "Depende de lo que decidas arriba." });
+  });
+
+  const fila = (f) => {
+    const { item, fantasma, nota } = f;
+    const marcado = !fantasma && estado.respuestas[item.id];
+    return el("div", { class: "fila" + (fantasma ? " fantasma" : ""), "data-hecho": marcado ? "1" : "0" },
+      el("button", {
+        class: "tick", "aria-label": "Marcar hecho", disabled: !!fantasma,
+        onclick: () => {
+          if (fantasma) return;
+          estado.respuestas[item.id] = marcado ? undefined : (item.respuestas ? item.respuestas[0] : "Hecho");
+          render();
+        },
+      }, "✓"),
+      el("div", { class: "fila-txt" },
+        item.corto || item.accion,
+        el("small", {}, nombrePlanta(item.planta)),
+        nota ? el("span", { class: "fila-efecto" }, nota) : null,
+        item.razon
+          ? (estado.abiertos[item.id]
+              ? el("div", { style: "margin-top:.5rem" }, porque(item, { siempre: true }))
+              : el("button", {
+                  class: "link-porque", style: "margin-top:.35rem",
+                  onclick: () => { estado.abiertos[item.id] = true; render(); },
+                }, "¿Por qué?"))
+          : null,
+        marcado ? el("div", { style: "margin-top:.5rem" }, cajonNota(item)) : null,
+      ),
+    );
+  };
+
+  const hayLista = Object.keys(grupos).length > 0;
+
+  return el("div", { style: "display:flex;flex-direction:column;gap:1.1rem" },
+    cabecera(sem),
+    sem.alertas.map(bloqueAlerta),
+
+    nDecisiones
+      ? el("div", { class: "decidir" },
+          el("div", { class: "d-cabeza" },
+            el("h2", {}, "Antes de nada, decide esto"),
+            el("span", { class: "d-pend" + (pend ? "" : " d-listo") },
+              pend ? `${pend} de ${nDecisiones} sin contestar` : "todo contestado"),
+          ),
+          recon ? tarjetaReconciliacion(recon) : null,
+          sups.map(tarjetaSupresion),
+          barraAceptar(sem),
+        )
+      : null,
+
+    !hayLista
+      ? el("div", { class: "card" }, el("div", { class: "body" },
+          el("div", { class: "plant-name" }, "Nada que hacer"),
+          el("div", { class: "silencio" }, "Las cuatro plantas están servidas esta semana."),
+        ))
+      : el("div", { class: "lista-cond", "data-pendiente": pend ? "1" : "0" },
+          el("div", { style: "display:flex;flex-direction:column;gap:1.1rem" },
+            pend
+              ? el("div", { class: "cond-aviso" }, "Esta lista aún puede cambiar según lo que contestes arriba.")
+              : null,
+            Object.entries(grupos).map(([verbo, filas]) =>
+              el("div", { class: "grupo" },
+                el("div", { class: "grupo-head" }, `${VERBOS[verbo] || verbo} · ${filas.length}`),
+                filas.map(fila),
+              ),
+            ),
+          ),
+        ),
+
+    retirados.length
+      ? el("div", { class: "cond-aviso" },
+          retirados.map((r) => el("div", {}, `${r.item.corto || r.item.accion} — ${r.nota.toLowerCase()}`)))
+      : null,
+
+    sem.silencio.length
+      ? el("details", { class: "plegado" },
+          el("summary", {}, `${sem.silencio.length} planta${sem.silencio.length > 1 ? "s" : ""} sin nada que hacer`),
+          el("div", {}, sem.silencio.map((s) =>
+            el("div", { class: "silencio" },
+              el("strong", { style: "font-weight:600;color:var(--ink)" }, nombrePlanta(s.planta)),
+              " — " + s.linea,
+            ),
+          )),
+        )
+      : null,
+  );
+}
+
+/* ============================================================
    VARIANTE C — una cosa a la vez, en cola
    ============================================================ */
 
@@ -788,6 +947,7 @@ function VarianteC(sem) {
 const VARIANTES = [
   ["A", "Ficha por planta", VarianteA],
   ["B", "Agrupado por acción", VarianteB],
+  ["D", "Decisiones primero", VarianteD],
   ["C", "Una cosa a la vez", VarianteC],
 ];
 
@@ -795,9 +955,9 @@ const VARIANTES = [
    query string, así que la URL sola no basta. Se sigue escribiendo por si el
    fichero se abre suelto, pero nunca se lee como fuente de verdad. */
 const inicial = new URLSearchParams(location.search);
-const vIni = (inicial.get("variant") || "A").toUpperCase();
+const vIni = (inicial.get("variant") || "D").toUpperCase();
 let actual = {
-  v: ["A", "B", "C"].includes(vIni) ? vIni : "A",
+  v: VARIANTES.some(([k]) => k === vIni) ? vIni : "D",
   s: inicial.get("semana") === "vacia" ? "vacia" : "llena",
 };
 
