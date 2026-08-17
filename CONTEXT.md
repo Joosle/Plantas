@@ -65,8 +65,24 @@ Un PlanItem que nace en un WeeklyPlan porque su equivalente de la semana anterio
 _Avoid_: Overdue, rolled over, pending
 
 **Alert** (alerta):
-Un aviso disparado por el pronóstico, con ventana de validez, sobre una Plant o sobre un Site entero. Caduca sola y nunca se arrastra — eso la separa del PlanItem.
+Un aviso con ventana de validez, sobre una Plant o sobre un Site entero. Caduca sola y nunca se arrastra — eso la separa del PlanItem. Los dos ámbitos no comparten disparador: la de Site es el aviso oficial de AEMET retransmitido (anomalía para la zona); la de Plant es el cruce de un umbral citado del ejemplar. Tiene dos formas según haya acción posible o no, y sólo la que la tiene interrumpe.
 _Avoid_: Warning, notification, urgent task
+
+**Observation alert** (aviso de observación):
+La forma de Alert que se emite cuando no hay nada que hacer: no pide actuar, pide mirar después. Existe porque suprimirla escondería el evento, y porque la observación que provoca es la única señal de resultado del sistema.
+_Avoid_: Info alert, aviso informativo
+
+**Watch** (vigilancia):
+Una línea del WeeklyPlan que anuncia un fenómeno previsto sin afirmarlo: «el jueves puede helar». No interrumpe, y su estado se deriva de si la Alert de la víspera llegó a nacer. Es previsión, no tarea.
+_Avoid_: Early alert, pre-alert, aviso temprano
+
+**SiteHardiness** (rusticidad del sitio):
+La estadística de mínimas extremas del Site sobre una serie larga, con su media y su cola. No dispara nada: contesta «¿puedo tener esto aquí?» y se recalcula una vez al año. El mensaje está en el hueco entre los dos números, no en la zona.
+_Avoid_: Zona USDA, hardiness zone
+
+**Shelter season** (temporada de protección):
+La ventana durante la cual una Plant vive protegida. La abre el primer pronóstico de helada del otoño y la cierra un horizonte de pronóstico entero sin cruces — nunca una fecha. Mientras está abierta y el diario dice que la acción está hecha, la alerta de esa planta se suprime.
+_Avoid_: Winter window, overwintering period
 
 **WeatherSnapshot** (instantánea de clima):
 El estado del tiempo — observado y pronosticado — tal como se descargó en una fecha. Se conserva porque el consejo que lo citó debe poder auditarse después.
