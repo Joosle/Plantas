@@ -43,8 +43,16 @@ Algo que el usuario hizo a una Plant, de un vocabulario cerrado, en una fecha. R
 _Avoid_: Task, activity, care event
 
 **Observation** (observación):
-Algo que el usuario vio en una Plant. Texto libre con etiquetas, y opcionalmente una lectura estructurada.
+Algo que se vio en una Plant. Texto libre con etiquetas, opcionalmente una lectura estructurada y opcionalmente Photos. Su autor es el usuario o system: el analisis de una Photo produce una Observation automatica, fechada con el occurredAt de la foto y no con el del analisis.
 _Avoid_: Note, comment, remark
+
+**Photo** (foto):
+Una imagen de una Plant, tomada en una fecha, redimensionada a 2576 px de lado largo y guardada en R2; en la tabla vive un PhotoRef con su clave, nunca el binario. No se borra nunca. Al subirse se analiza, y ese analisis produce una Observation de autor system.
+_Avoid_: Image, picture, attachment, adjunto
+
+**Reference photo** (foto de referencia):
+La Photo marcada de una Plant para una temporada. Es la unica que vuelve a entrar como imagen en analisis posteriores, para dar linea base al cambio lento; las demas no las relee ninguna maquina.
+_Avoid_: Baseline image, foto patron
 
 **Reading** (lectura):
 La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él.
