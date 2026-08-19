@@ -43,6 +43,11 @@ El rosal a género **no es un fallo de identificación**: los rosales de jardín
 cultivares híbridos sin especie limpia, así que género *es* el rango terminal correcto.
 El único hueco real es el abeto.
 
+Y bajar de rango tampoco daría lo que hace falta: el dato que decide la poda del rosal
+—remontante o no— **no lo sirve ningún rango**, porque varía entre cultivares del mismo
+género y no hay fuente que lo publique por taxón. Sólo se obtiene mirando el arbusto (ver
+más abajo). Es el primer caso del inventario donde identificar mejor no ayudaría en nada.
+
 ### Detalle por planta
 
 **El olivo del jardín este.** Árbol arraigado, en suelo, sin riego. Nombre común
@@ -58,6 +63,77 @@ número uno para
 noroeste con alero parcial. Es la única planta con microclima de pared: sombra de lluvia
 parcial y calor reflejado por la fachada — los dos factores que el `kmc` de WUCOLS existe
 para capturar.
+
+#### Remontante o no: sin determinar, y su poda es julio hasta que se sepa
+
+El tipo de rosal decide su poda, y **este ejemplar no tiene el dato**. La fuente oficial
+que localizó
+[Calendario de tareas no-hídricas: poda, abonado y protección con cita](https://github.com/Joosle/Plantas/issues/17)
+—Hoja Divulgadora 5-6/80 del Ministerio de Agricultura— trata los dos tipos por separado:
+los **no remontantes** se podan *«después de que hayan florecido, lo que ocurre, en
+general, en el mes de julio»*; los **remontantes**, dentro de la ventana general de
+*«finales de diciembre a mitad de marzo»*.
+
+**Corrección: «enero» no aplica a esta casa.** La fuente no da un mes para los remontantes,
+da una ventana con tres modificadores condicionados, y el mes sale sólo del tercero: *«en
+las regiones de clima muy benigno, como la zona mediterránea, se aconseja hacer dos podas.
+Una, la poda clásica, en enero»*. El Casar está a **824 m**
+([Alta de API key de AEMET OpenData](https://github.com/Joosle/Plantas/issues/12)) con una
+cola fría de **−11,1 °C**
+([Alertas de helada y calor](https://github.com/Joosle/Plantas/issues/19)): no es clima muy
+benigno, y le toca el **segundo** modificador, que empuja al lado contrario — *«la poda
+tardía es aconsejable en aquellos climas donde sean de temer las heladas tardías que pueden
+destruir los brotes tiernos recién salidos»*. La ventana aplicable si resulta remontante es
+el **extremo tardío**: de finales de febrero a mediados de marzo. Arrastrar «enero» hasta
+aquí era la *extrapolación climática* que el propio #17 mandaba penalizar, cometida sobre
+su propia cita.
+
+**Mientras el tipo esté indeterminado, la poda que se emite es la de julio.** No es un
+empate al que se le tira una moneda: los dos errores cuestan cosas muy distintas.
+
+| Se poda… | y resulta ser… | coste |
+| --- | --- | --- |
+| Marzo | no remontante | **la floración entera del año** — la fuente manda podarlo *después* de florecer, así que podar antes se lleva por delante la única floración que tiene |
+| Julio | remontante | **parte de una sola oleada** — vuelve a florecer sobre brote nuevo, y la fuente llega a recomendar una poda ligera estival para este tipo (en climas benignos, no aquí) |
+
+Julio es el lado barato, así que es el defecto declarado. *(El mecanismo de la madera vieja
+es **salto inferencial**, no cita: la fuente prescribe el cuándo, no el porqué. La
+asimetría se sostiene igual sin él, porque «podar antes de que florezca» contradice la
+instrucción literal.)*
+
+**Cómo se determina, y cuándo.** El criterio es si vuelve a florecer, y no todas las fechas
+valen lo mismo:
+
+- **Otoño (septiembre–noviembre)** — la señal fuerte y la más próxima. La fuente asocia a
+  los remontantes *«una floración más abundante, y de calidad, en otoño»*.
+- **Segunda oleada tras la de primavera (finales de mayo–junio)** — concluyente.
+- **Agosto** — **débil, y no sirve como negativo**: la propia fuente describe un *«reposo
+  estival que se produce naturalmente por los fuertes calores»*, así que un remontante
+  puede estar sin flor ahora mismo.
+
+El cierre es asimétrico a propósito: **un solo sí lo cierra para siempre** —una planta que
+refloreció es remontante, y eso no caduca—, mientras que *no remontante* sólo se concluye
+tras una **temporada completa** de noes en esas ventanas. Es la misma forma que
+[Cómo entra el acolchado en el balance hídrico](https://github.com/Joosle/Plantas/issues/20)
+y [Plantas arraigadas que no se riegan](https://github.com/Joosle/Plantas/issues/16) ya
+adoptaron: termina preguntando, no venciendo.
+
+**Dónde vive el dato: en ninguno de los dos sitios que se propusieron.** No es campo de la
+`Plant` ni fila de la tabla de hechos citables de
+[La tabla de cuidados curada](https://github.com/Joosle/Plantas/issues/18), porque **no
+tiene ni tendrá cita**: ninguna fuente sirve «remontante» para el género *Rosa* —varía
+dentro de él— y su procedencia es haber mirado *este* arbusto. Se descompone en dos piezas
+que ya existen:
+
+- Las **observaciones** son `Observation` con `reading` (`floración: sí | no`, fechada),
+  que es lo que `CONTEXT.md` define como *un juicio sobre un estado*, y el motor ya lee.
+- El **rasgo es derivado** de ellas, con tres estados (`remontante` / `no remontante` /
+  `indeterminado`), igual que el arraigo de #16 es derivado y no un campo.
+
+El grupo funcional de #17/#18 sigue en juego, pero como **consumidor y no como almacén**:
+el consejo de poda cuelga de `rosal-remontante` / `rosal-no-remontante` con su cita, y el
+rasgo derivado de la `Plant` es lo que elige a cuál pertenece. Las dos mitades de la
+disyuntiva del ticket eran ciertas sobre objetos distintos.
 
 **El aloe de la terraza.** Maceta de plástico, **25 cm de diámetro de boca × 24 cm de
 alto**. Derivados para el modo maceta del modelo hídrico:
