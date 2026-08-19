@@ -47,7 +47,7 @@ Algo que el usuario vio en una Plant. Texto libre con etiquetas, y opcionalmente
 _Avoid_: Note, comment, remark
 
 **Reading** (lectura):
-La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él.
+La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él. Hoy hay dos: humedad del sustrato (`seco | húmedo`) y fenología (`presente | ausente`, anclada al hecho citable que hizo la pregunta).
 _Avoid_: Measurement, sensor value
 
 ### El consejo
@@ -59,6 +59,14 @@ _Avoid_: Schedule, weekly tasks, care plan
 **PlanItem** (tarea del plan):
 Una tarea sobre una Plant dentro de un WeeklyPlan. Su estado no se guarda: se deriva de las JournalEntry que lo responden.
 _Avoid_: Todo, task, checklist item
+
+**Phenological item** (ítem fenológico):
+Un PlanItem cuya primera mitad es una pregunta sobre algo que el usuario ve, y cuya segunda mitad —la acción— nace congelada con ella y se activa si la respuesta es `presente`. No es un tipo aparte: es un PlanItem con otro vocabulario de respuesta.
+_Avoid_: Check, inspection task, observation task
+
+**Window** (ventana):
+El tramo del año en que una tarea tiene sentido, declarado por el hecho citable que la funda. Fuera de la ventana la tarea no se emite; al cerrarse, el ítem sin responder caduca en vez de arrastrarse.
+_Avoid_: Season, date range, deadline
 
 **Carried over** (arrastrada):
 Un PlanItem que nace en un WeeklyPlan porque su equivalente de la semana anterior quedó sin responder, apuntando al viejo para que se vea cuánto lleva pendiente.
