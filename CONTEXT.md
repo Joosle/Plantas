@@ -35,7 +35,7 @@ _Avoid_: Deleted, inactive, removed
 ### El diario
 
 **JournalEntry** (entrada de diario):
-Lo que se sabe de una Plant a lo largo del tiempo. Es CareAction u Observation. El diario es el estado del sistema: si no hay entradas, el motor está ciego.
+Lo que se sabe de una Plant a lo largo del tiempo. Es CareAction, Observation, LifecycleEvent o Photo. El diario es el estado del sistema: si no hay entradas, el motor está ciego.
 _Avoid_: Log entry, record, event
 
 **CareAction** (acción):
@@ -49,6 +49,18 @@ _Avoid_: Note, comment, remark
 **Reading** (lectura):
 La parte estructurada y legible por el motor de una Observation — un juicio sobre un estado, no una prosa sobre él.
 _Avoid_: Measurement, sensor value
+
+**Photo** (foto):
+Una fotografía fechada de una Plant, como entrada de diario de pleno derecho. No lleva escrito para qué se hizo: el propósito se deriva de la entrada hermana que su análisis produjo. Hacer la foto ya es el hecho registrado, no el adjunto de otro.
+_Avoid_: Image, attachment, picture
+
+**PhotoRef** (referencia de foto):
+La clave del archivo en R2 que lleva dentro una Photo, con sus marcas de analizada y de referencia estacional. El binario nunca vive en la base de datos.
+_Avoid_: Blob, upload, file
+
+**Gallery** (galería):
+La vista de las Photo de una Plant en el tiempo, dentro de su ficha. Existe para comparar dos fechas, no para hojear: es donde se arbitra una propuesta de ajuste, con el par que citó la propuesta.
+_Avoid_: Album, photo feed, timeline
 
 ### El consejo
 
