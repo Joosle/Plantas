@@ -25,8 +25,16 @@ Los hechos citables de cuidado de un Taxon. Cuelga del rango donde la fuente los
 _Avoid_: Care sheet, species data, care requirements
 
 **Site** (sitio):
-El lugar donde vive una Plant, con lo que es propio del lugar: interior o exterior, cuánta lluvia le llega y su microclima. La exposición solar no es del Site sino de la Plant, porque varía dentro de un mismo cuarto.
+El lugar donde vive una Plant, con lo que es propio del lugar: interior o exterior, cuánta lluvia le llega y su microclima. La exposición solar no es del Site sino de la Plant, porque varía dentro de un mismo cuarto. Cuando hay Container de por medio, el Site es del Container y sus inquilinos están donde el recipiente.
 _Avoid_: Location, place, spot, room
+
+**Container** (recipiente):
+Un depósito de agua acotado por paredes, con sus litros y su área de boca, en el que viven de una a n Plant. La maceta es el caso de un solo inquilino; la jardinera, el de varios. El balance en litros corre por Container y no por Plant: la lluvia entra una vez por la boca y la salida es la suma de las ET de sus inquilinos.
+_Avoid_: Pot, planter, maceta, jardinera
+
+**Emplazamiento** (emplazamiento):
+Dónde vive una Plant, en los únicos dos valores que cambian la ecuación: `suelo` —depósito abierto, balance en mm— o un Container —depósito acotado, balance en litros—. Bancal, alcorque, maceta y jardinera son palabras de la interfaz, no ramas del motor.
+_Avoid_: Placement, potted, in-ground
 
 **Archived** (archivada):
 Plant que ya no está al cuidado del usuario, con el motivo por el que se fue. Sale de planes y alertas; conserva su diario íntegro.
@@ -57,7 +65,7 @@ El acta inmutable del consejo dado en una semana, para todas las Plant, con los 
 _Avoid_: Schedule, weekly tasks, care plan
 
 **PlanItem** (tarea del plan):
-Una tarea sobre una Plant dentro de un WeeklyPlan. Su estado no se guarda: se deriva de las JournalEntry que lo responden.
+Una tarea dentro de un WeeklyPlan, sobre una Plant o sobre un Container según el verbo: el riego es del recipiente, la poda y la observación son del ejemplar. Un ítem es un gesto, no una planta. Su estado no se guarda: se deriva de las JournalEntry que lo responden — y responder un ítem de recipiente escribe una CareAction por inquilino, porque el diario siempre es de la Plant.
 _Avoid_: Todo, task, checklist item
 
 **Carried over** (arrastrada):
