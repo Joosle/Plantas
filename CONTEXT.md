@@ -24,6 +24,18 @@ _Avoid_: Unknown, pending identification
 Los hechos citables de cuidado de un Taxon. Cuelga del rango donde la fuente los tenga, que no siempre es el rango al que se identificó la planta.
 _Avoid_: Care sheet, species data, care requirements
 
+**FunctionalGroup** (grupo funcional):
+Un conjunto de plantas definido por un rasgo **observable sin identificar la planta**, que sostiene consejos protectores imposibles de escribir a nivel de taxón. Es el otro sujeto posible de un CareFact. Existe sólo si un CareFact citado lo apunta: el hecho crea el grupo. El catálogo es dato del repo — el usuario declara pertenencia, nunca vocabulario. Una Plant lleva de 0 a N.
+_Avoid_: Category, plant type, family, clade
+
+**GroupCriterion** (criterio observable):
+La pregunta en llano que decide si una Plant pertenece a un FunctionalGroup, guardada en el grupo — «¿tiene las hojas en forma de aguja o de escama, y da piñas?». Es lo que se le enseña al usuario; el identificador del grupo nunca se le enseña.
+_Avoid_: Rule, test, trait
+
+**Unclassified** (sin grupo):
+Estado de una Plant cuyo grupo no se sabe, distinto de saber que no pertenece. El motor no aplica consejos protectores **y lo dice**: un silencio razonado y un «no sé qué es esto» se ven igual en pantalla y son opuestos.
+_Avoid_: No group, null, untagged
+
 **Site** (sitio):
 El lugar donde vive una Plant, con lo que es propio del lugar: interior o exterior, cuánta lluvia le llega y su microclima. La exposición solar no es del Site sino de la Plant, porque varía dentro de un mismo cuarto.
 _Avoid_: Location, place, spot, room
